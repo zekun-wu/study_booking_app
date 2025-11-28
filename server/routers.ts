@@ -150,7 +150,7 @@ export const appRouter = router({
 
         // Send email notifications
         try {
-          const { sendBookingNotifications } = await import('./email');
+          const { sendBookingNotifications } = await import('./email-resend');
           await sendBookingNotifications({
             parentName: input.parentName,
             childName: input.childName,
