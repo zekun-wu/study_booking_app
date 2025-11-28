@@ -10,11 +10,19 @@ const createTransporter = () => {
   }
 
   return createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // use TLS
     auth: {
       user: ENV.emailUser,
       pass: ENV.emailPassword,
     },
+    tls: {
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   });
 };
 
