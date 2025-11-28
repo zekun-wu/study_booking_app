@@ -10,6 +10,13 @@ export async function createTables() {
   try {
     const connection = await mysql.createConnection(ENV.databaseUrl);
 
+    console.log("[Create-Tables] Dropping existing tables if they exist...");
+    
+    // Drop tables in correct order (bookings first due to foreign key)
+    await connection.query(`DROP TABLE IF EXISTS bookings`);
+    await connection.query(`DROP TABLE IF EXISTS timeSlots`);
+    await connection.query(`DROP TABLE IF EXISTS admins`);
+    
     console.log("[Create-Tables] Creating database tables...");
 
     // Create admins table
