@@ -51,12 +51,11 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(__dirname, "../..", "dist", "public")
-      : path.resolve(__dirname, "public");
+  // In production (Railway), files are in /app/dist/public
+  // __dirname in production points to /app/dist, so we need to go to /app/dist/public
+  const distPath = process.env.NODE_ENV === "development"
+    ? path.resolve(process.cwd(), "dist", "public")
+    : path.resolve(process.cwd(), "dist", "public");
   if (!fs.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
