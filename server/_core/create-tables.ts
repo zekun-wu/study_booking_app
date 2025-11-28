@@ -16,8 +16,24 @@ export async function createTables() {
     await connection.query(`DROP TABLE IF EXISTS bookings`);
     await connection.query(`DROP TABLE IF EXISTS timeSlots`);
     await connection.query(`DROP TABLE IF EXISTS admins`);
+    await connection.query(`DROP TABLE IF EXISTS users`);
     
     console.log("[Create-Tables] Creating database tables...");
+
+    // Create users table (for admin authentication)
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        openId VARCHAR(64) NOT NULL UNIQUE,
+        name TEXT,
+        email VARCHAR(320),
+        loginMethod VARCHAR(64),
+        role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+        lastSignedIn TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+      )
+    `);
 
     // Create admins table
     await connection.query(`
