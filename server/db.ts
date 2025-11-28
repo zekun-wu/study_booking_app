@@ -68,11 +68,18 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
+    console.log('[Database] Upserting user with values:', JSON.stringify(values, null, 2));
+    console.log('[Database] Update set:', JSON.stringify(updateSet, null, 2));
+    
     await db.insert(users).values(values).onDuplicateKeyUpdate({
       set: updateSet,
     });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
+    if (error instanceof Error) {
+      console.error("[Database] Error message:", error.message);
+      console.error("[Database] Error stack:", error.stack);
+    }
     throw error;
   }
 }
