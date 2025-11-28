@@ -67,7 +67,7 @@ export async function sendBookingNotifications(booking: BookingDetails) {
 
     console.log(`[Email] Attempting to send notice email to ${adminEmail}...`);
     const noticeResult = await resend.emails.send({
-      from: 'Study Booking <onboarding@resend.dev>',
+      from: 'Study Booking <study-booking@zekunwu.com>',
       to: adminEmail,
       subject: `New Booking: ${booking.location} - ${booking.slotTitle}`,
       html: noticeEmailHtml,
@@ -117,7 +117,7 @@ export async function sendBookingNotifications(booking: BookingDetails) {
 
     console.log(`[Email] Attempting to send confirmation email to ${booking.userEmail}...`);
     const confirmResult = await resend.emails.send({
-      from: 'Study Booking <onboarding@resend.dev>',
+      from: 'Study Booking <study-booking@zekunwu.com>',
       to: booking.userEmail,
       subject: `Booking Confirmation - ${booking.location} Study Session`,
       html: confirmationEmailHtml,
