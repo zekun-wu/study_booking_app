@@ -28,13 +28,17 @@ export async function createTables() {
     await connection.query(`
       CREATE TABLE IF NOT EXISTS timeSlots (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        location VARCHAR(50) NOT NULL,
-        startTime DATETIME NOT NULL,
-        endTime DATETIME NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        location VARCHAR(100) NOT NULL,
+        startTime TIMESTAMP NOT NULL,
+        endTime TIMESTAMP NOT NULL,
         maxBookings INT NOT NULL DEFAULT 1,
         currentBookings INT NOT NULL DEFAULT 0,
-        title VARCHAR(255) NOT NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        isActive INT NOT NULL DEFAULT 1,
+        createdBy INT NOT NULL DEFAULT 1,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
         INDEX idx_location (location),
         INDEX idx_start_time (startTime)
       )
@@ -48,10 +52,10 @@ export async function createTables() {
         parentName VARCHAR(255) NOT NULL,
         childName VARCHAR(255) NOT NULL,
         childAge INT NOT NULL,
-        email VARCHAR(255) NOT NULL,
-        phone VARCHAR(50),
+        userEmail VARCHAR(320),
+        userPhone VARCHAR(50),
         notes TEXT,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         FOREIGN KEY (timeSlotId) REFERENCES timeSlots(id) ON DELETE CASCADE,
         INDEX idx_timeslot (timeSlotId)
       )

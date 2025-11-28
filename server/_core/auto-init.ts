@@ -90,6 +90,9 @@ export async function autoInitializeDatabase() {
               maxBookings: 1,
               currentBookings: 0,
               title: `${location} - ${timeRange.start}`,
+              description: null,
+              isActive: 1,
+              createdBy: 1,
             });
           }
         }
