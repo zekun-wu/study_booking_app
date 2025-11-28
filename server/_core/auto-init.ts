@@ -3,6 +3,7 @@ import mysql from "mysql2/promise";
 import { admins, timeSlots } from "../../drizzle/schema";
 import { ENV } from "./env";
 import { createTables } from "./create-tables";
+import bcrypt from "bcryptjs";
 
 let initialized = false;
 
@@ -31,21 +32,25 @@ export async function autoInitializeDatabase() {
     
     if (existingAdmins.length === 0) {
       console.log("[Auto-Init] Creating admin accounts...");
+      
+      // Hash passwords before storing
+      const hashedPassword = await bcrypt.hash("Admin2024!", 10);
+      
       await db.insert(admins).values([
         {
           email: "iwm@admin.com",
-          password: "Admin2024!",
+          password: hashedPassword,
           name: "IWM Admin",
           location: "IWM",
         },
         {
           email: "saarland@admin.com",
-          password: "Admin2024!",
+          password: hashedPassword,
           name: "Saarland Admin",
           location: "Saarland",
         },
       ]);
-      console.log("[Auto-Init] ✅ Admin accounts created");
+      console.log("[Auto-Init] ✅ Admin accounts created with hashed passwords");
     }
 
     // Check if time slots exist
