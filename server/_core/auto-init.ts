@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import { admins, timeSlots } from "../../drizzle/schema";
 import { ENV } from "./env";
+import { createTables } from "./create-tables";
 
 let initialized = false;
 
@@ -15,6 +16,13 @@ export async function autoInitializeDatabase() {
   console.log("[Auto-Init] Checking database initialization...");
 
   try {
+    // First, ensure tables exist
+    const tablesCreated = await createTables();
+    if (!tablesCreated) {
+      console.log("[Auto-Init] Failed to create tables");
+      return;
+    }
+
     const connection = await mysql.createConnection(ENV.databaseUrl);
     const db = drizzle(connection);
 
