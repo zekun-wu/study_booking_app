@@ -16,12 +16,15 @@ interface BookingDetails {
 export async function sendBookingNotifications(booking: BookingDetails) {
   const resendApiKey = process.env.RESEND_API_KEY;
   
+  console.log('[Email] Checking Resend API key...', resendApiKey ? `Key present (${resendApiKey.substring(0, 8)}...)` : 'Key missing');
+  
   if (!resendApiKey) {
     console.log('[Email] Skipping email notifications (RESEND_API_KEY not configured)');
     return { success: false, reason: 'Email not configured' };
   }
 
   const resend = new Resend(resendApiKey);
+  console.log('[Email] Resend client initialized');
 
   try {
     const startTimeStr = booking.startTime.toLocaleString('en-US', {
@@ -62,6 +65,7 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       <p>Please log in to the admin dashboard to view more details.</p>
     `;
 
+    console.log(`[Email] Attempting to send notice email to ${adminEmail}...`);
     const noticeResult = await resend.emails.send({
       from: 'Study Booking <onboarding@resend.dev>',
       to: adminEmail,
@@ -70,7 +74,13 @@ export async function sendBookingNotifications(booking: BookingDetails) {
     });
 
     console.log(`[Email] Notice email result:`, JSON.stringify(noticeResult));
-    console.log(`[Email] Notice email sent to ${adminEmail}`);
+    
+    if (noticeResult.error) {
+      console.error(`[Email] Notice email failed:`, noticeResult.error);
+      throw new Error(`Notice email failed: ${JSON.stringify(noticeResult.error)}`);
+    }
+    
+    console.log(`[Email] ✅ Notice email sent to ${adminEmail} (ID: ${noticeResult.data?.id})`);
 
     // Send confirmation email to user
     const confirmationEmailHtml = `
@@ -105,6 +115,7 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       The Research Team</p>
     `;
 
+    console.log(`[Email] Attempting to send confirmation email to ${booking.userEmail}...`);
     const confirmResult = await resend.emails.send({
       from: 'Study Booking <onboarding@resend.dev>',
       to: booking.userEmail,
@@ -113,11 +124,21 @@ export async function sendBookingNotifications(booking: BookingDetails) {
     });
 
     console.log(`[Email] Confirmation email result:`, JSON.stringify(confirmResult));
-    console.log(`[Email] Confirmation email sent to ${booking.userEmail}`);
+    
+    if (confirmResult.error) {
+      console.error(`[Email] Confirmation email failed:`, confirmResult.error);
+      throw new Error(`Confirmation email failed: ${JSON.stringify(confirmResult.error)}`);
+    }
+    
+    console.log(`[Email] ✅ Confirmation email sent to ${booking.userEmail} (ID: ${confirmResult.data?.id})`);
 
     return { success: true };
   } catch (error) {
-    console.error('[Email] Error sending emails:', error);
+    console.error('[Email] ❌ Error sending emails:', error);
+    if (error instanceof Error) {
+      console.error('[Email] Error message:', error.message);
+      console.error('[Email] Error stack:', error.stack);
+    }
     console.error('[Email] Error details:', JSON.stringify(error, null, 2));
     return { success: false, reason: error instanceof Error ? error.message : 'Unknown error' };
   }
