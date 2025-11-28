@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1764064146364,
+      "tag": "0000_petite_nocturne",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1764067530508,
+      "tag": "0001_complete_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1764189276187,
+      "tag": "0002_adorable_sheva_callister",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1764192332175,
+      "tag": "0003_huge_terrax",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1764192540782,
+      "tag": "0004_windy_scarlet_witch",
+      "breakpoints": true
+    }
+  ]
+}
