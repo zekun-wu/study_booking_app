@@ -62,13 +62,14 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       <p>Please log in to the admin dashboard to view more details.</p>
     `;
 
-    await resend.emails.send({
+    const noticeResult = await resend.emails.send({
       from: 'Study Booking <onboarding@resend.dev>',
       to: adminEmail,
       subject: `New Booking: ${booking.location} - ${booking.slotTitle}`,
       html: noticeEmailHtml,
     });
 
+    console.log(`[Email] Notice email result:`, JSON.stringify(noticeResult));
     console.log(`[Email] Notice email sent to ${adminEmail}`);
 
     // Send confirmation email to user
@@ -104,18 +105,20 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       The Research Team</p>
     `;
 
-    await resend.emails.send({
+    const confirmResult = await resend.emails.send({
       from: 'Study Booking <onboarding@resend.dev>',
       to: booking.userEmail,
       subject: `Booking Confirmation - ${booking.location} Study Session`,
       html: confirmationEmailHtml,
     });
 
+    console.log(`[Email] Confirmation email result:`, JSON.stringify(confirmResult));
     console.log(`[Email] Confirmation email sent to ${booking.userEmail}`);
 
     return { success: true };
   } catch (error) {
     console.error('[Email] Error sending emails:', error);
+    console.error('[Email] Error details:', JSON.stringify(error, null, 2));
     return { success: false, reason: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
