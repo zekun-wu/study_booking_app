@@ -116,12 +116,12 @@ export default function BookingPage() {
           <p className="text-base text-amber-800 font-semibold">
             {language === 'en' ? (
               <span>
-                Please choose <strong>one available time slot</strong>. 
+                Please choose <strong>up to 3 available time slots</strong>. 
                 We will reach you shortly with email to confirm the final time.
               </span>
             ) : (
               <span>
-                Bitte wählen Sie <strong>ein verfügbares Zeitfenster</strong>. 
+                Bitte wählen Sie <strong>bis zu 3 verfügbare Zeitfenster</strong>. 
                 Wir werden Sie in Kürze per E-Mail kontaktieren, um die endgültige Zeit zu bestätigen.
               </span>
             )}
