@@ -14,22 +14,25 @@ import CalendarView from "@/components/CalendarView";
 export default function BookingPage() {
   const { language, setLanguage, t } = useLanguage();
   const [selectedLocation, setSelectedLocation] = useState<string>("Saarland");
-  const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [selectedSlots, setSelectedSlots] = useState<any[]>([]); // Multiple slots
   const [isBookingDialogOpen, setIsBookingDialogOpen] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [assignedSlot, setAssignedSlot] = useState<any>(null); // The final assigned slot
 
   const utils = trpc.useUtils();
   const { data: timeSlots, isLoading } = trpc.timeSlots.listActive.useQuery({ location: selectedLocation });
 
   const bookingMutation = trpc.bookings.create.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setAssignedSlot(data.assignedSlot);
       setBookingSuccess(true);
       utils.timeSlots.listActive.invalidate();
       setTimeout(() => {
         setIsBookingDialogOpen(false);
         setBookingSuccess(false);
-        setSelectedSlot(null);
-      }, 2000);
+        setSelectedSlots([]);
+        setAssignedSlot(null);
+      }, 5000); // Show success for 5 seconds
     },
     onError: (error) => {
       toast.error(error.message);
@@ -37,7 +40,28 @@ export default function BookingPage() {
   });
 
   const handleSlotClick = (slot: any) => {
-    setSelectedSlot(slot);
+    // Toggle slot selection (max 3)
+    setSelectedSlots(prev => {
+      const isSelected = prev.some(s => s.id === slot.id);
+      if (isSelected) {
+        // Deselect
+        return prev.filter(s => s.id !== slot.id);
+      } else {
+        // Select (max 3)
+        if (prev.length >= 3) {
+          toast.error(language === 'en' ? 'You can select up to 3 time slots' : 'Sie können bis zu 3 Zeitfenster auswählen');
+          return prev;
+        }
+        return [...prev, slot];
+      }
+    });
+  };
+  
+  const handleOpenBookingDialog = () => {
+    if (selectedSlots.length === 0) {
+      toast.error(language === 'en' ? 'Please select at least one time slot' : 'Bitte wählen Sie mindestens ein Zeitfenster aus');
+      return;
+    }
     setIsBookingDialogOpen(true);
     setBookingSuccess(false);
   };
@@ -47,7 +71,7 @@ export default function BookingPage() {
     const formData = new FormData(e.currentTarget);
 
     bookingMutation.mutate({
-      timeSlotId: selectedSlot.id,
+      timeSlotIds: selectedSlots.map(s => s.id),
       parentName: formData.get("parentName") as string,
       childName: formData.get("childName") as string,
       childAge: parseInt(formData.get("childAge") as string),
@@ -92,15 +116,13 @@ export default function BookingPage() {
           <p className="text-base text-amber-800 font-semibold">
             {language === 'en' ? (
               <span>
-                Each person can book a <strong>maximum of 2 time slots</strong>. 
-                Please choose your preferred times carefully. 
-                If you need to make changes, please contact us.
+                Please choose <strong>one available time slot</strong>. 
+                We will reach you shortly with email to confirm the final time.
               </span>
             ) : (
               <span>
-                Jede Person kann <strong>maximal 2 Zeitfenster</strong> buchen. 
-                Bitte wählen Sie Ihre bevorzugten Zeiten sorgfältig aus. 
-                Wenn Sie Änderungen vornehmen müssen, kontaktieren Sie uns bitte.
+                Bitte wählen Sie <strong>ein verfügbares Zeitfenster</strong>. 
+                Wir werden Sie in Kürze per E-Mail kontaktieren, um die endgültige Zeit zu bestätigen.
               </span>
             )}
           </p>
@@ -143,23 +165,73 @@ export default function BookingPage() {
           </div>
         )}
 
-        {selectedSlot && (
+        {/* Show selected slots count and confirm button */}
+        {selectedSlots.length > 0 && (
+          <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="bg-white rounded-lg shadow-2xl p-4 border-2 border-primary">
+              <p className="text-center font-semibold mb-2">
+                {language === 'en' ? `${selectedSlots.length} slot(s) selected` : `${selectedSlots.length} Zeitfenster ausgewählt`}
+              </p>
+              <Button onClick={handleOpenBookingDialog} size="lg" className="w-full">
+                {language === 'en' ? 'Continue to Booking' : 'Weiter zur Buchung'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {selectedSlots.length > 0 && (
           <Dialog open={isBookingDialogOpen} onOpenChange={setIsBookingDialogOpen}>
             <DialogContent className="sm:max-w-[500px]">
-              {bookingSuccess ? (
-                <div className="py-8 text-center">
-                  <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                  <DialogTitle className="text-2xl mb-2">{t('bookingConfirmed')}</DialogTitle>
-                  <DialogDescription className="text-base">
-                    {t('bookingSuccess')}
-                  </DialogDescription>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmitBooking}>
+            {bookingSuccess && assignedSlot ? (
+              <div className="py-8 text-center">
+                <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                <DialogTitle className="text-2xl mb-2">
+                  {language === 'en' ? 'Booking Confirmed!' : 'Buchung bestätigt!'}
+                </DialogTitle>
+                <DialogDescription className="text-base space-y-2">
+                  <p className="font-semibold text-lg text-gray-900">
+                    {language === 'en' ? 'Your confirmed time slot:' : 'Ihr bestätigtes Zeitfenster:'}
+                  </p>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <p className="font-bold text-green-900">{assignedSlot.location}</p>
+                    <p className="text-green-800">
+                      {new Date(assignedSlot.startTime).toLocaleString(language === 'de' ? 'de-DE' : 'en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-4">
+                    {language === 'en' 
+                      ? 'A confirmation email has been sent to your email address.' 
+                      : 'Eine Bestätigungs-E-Mail wurde an Ihre E-Mail-Adresse gesendet.'}
+                  </p>
+                </DialogDescription>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitBooking}>
                   <DialogHeader>
                     <DialogTitle>{t('bookTimeSlotTitle')}</DialogTitle>
                     <DialogDescription>
-                      {selectedSlot.title} - {new Date(selectedSlot.startTime).toLocaleString(language === 'de' ? 'de-DE' : 'en-US')}
+                      <div className="space-y-2 mt-2">
+                        <p className="font-semibold">
+                          {language === 'en' ? 'Selected time slots:' : 'Ausgewählte Zeitfenster:'}
+                        </p>
+                        {selectedSlots.map((slot, idx) => (
+                          <div key={slot.id} className="text-sm bg-blue-50 p-2 rounded">
+                            {idx + 1}. {slot.title} - {new Date(slot.startTime).toLocaleString(language === 'de' ? 'de-DE' : 'en-US')}
+                          </div>
+                        ))}
+                        <p className="text-xs text-gray-600 mt-2">
+                          {language === 'en' 
+                            ? 'We will assign you the earliest available slot from your selection.' 
+                            : 'Wir werden Ihnen das früheste verfügbare Zeitfenster aus Ihrer Auswahl zuweisen.'}
+                        </p>
+                      </div>
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -246,9 +318,10 @@ export default function BookingPage() {
                   </DialogFooter>
                 </form>
               )}
-            </DialogContent>
-          </Dialog>
-        )}
+              </DialogContent>
+            </Dialog>
+          )
+        }
       </div>
     </div>
   );

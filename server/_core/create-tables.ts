@@ -60,10 +60,13 @@ export async function createTables() {
         currentBookings INT NOT NULL DEFAULT 0,
         isActive INT NOT NULL DEFAULT 1,
         createdBy INT NOT NULL DEFAULT 1,
+        holdBy VARCHAR(320),
+        holdExpiresAt TIMESTAMP NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
         INDEX idx_location (location),
-        INDEX idx_start_time (startTime)
+        INDEX idx_start_time (startTime),
+        INDEX idx_hold_expires (holdExpiresAt)
       )
     `);
 

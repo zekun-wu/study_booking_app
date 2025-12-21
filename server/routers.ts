@@ -119,7 +119,7 @@ export const appRouter = router({
   bookings: router({
     create: publicProcedure
       .input(z.object({
-        timeSlotId: z.number(),
+        timeSlotIds: z.array(z.number()).min(1).max(3), // Up to 3 slots
         parentName: z.string().min(1),
         childName: z.string().min(1),
         childAge: z.number().min(1).max(18),
@@ -128,55 +128,83 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
-        // Check if user has already made 2 bookings
+        const { placeHolds, assignEarliestSlot, releaseHolds } = await import('./hold-manager');
+        
+        // Check if user has already made 3 bookings
         const existingBookings = await db.getBookingsByEmail(input.userEmail);
-        if (existingBookings.length >= 2) {
+        if (existingBookings.length >= 3) {
           throw new TRPCError({ 
             code: 'BAD_REQUEST', 
-            message: 'You have reached the maximum limit of 2 bookings per person. Please contact us if you need to make changes.' 
+            message: 'You have reached the maximum limit of 3 bookings per person.' 
           });
         }
         
-        // Check if slot exists and has capacity
-        const slot = await db.getTimeSlotById(input.timeSlotId);
-        if (!slot) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Time slot not found' });
-        }
-        if (slot.isActive !== 1) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Time slot is not active' });
-        }
-        if (slot.currentBookings >= slot.maxBookings) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Time slot is fully booked' });
-        }
-
-        // Create booking
-        const result = await db.createBooking(input);
-
-        // Update slot booking count
-        await db.updateTimeSlot(input.timeSlotId, {
-          currentBookings: slot.currentBookings + 1,
-        });
-
-        // Send email notifications
-        try {
-          const { sendBookingNotifications } = await import('./email-resend');
-          await sendBookingNotifications({
-            parentName: input.parentName,
-            childName: input.childName,
-            childAge: input.childAge,
-            userEmail: input.userEmail,
-            userPhone: input.userPhone,
-            location: slot.location,
-            slotTitle: slot.title,
-            startTime: new Date(slot.startTime),
-            endTime: new Date(slot.endTime),
+        console.log(`[Booking] User ${input.userEmail} attempting to book slots:`, input.timeSlotIds);
+        
+        // Step 1: Place soft-holds on all selected slots
+        const holdResult = await placeHolds(input.timeSlotIds, input.userEmail);
+        
+        if (!holdResult.success || holdResult.heldSlots.length === 0) {
+          console.log(`[Booking] No slots could be held. Failed slots:`, holdResult.failedSlots);
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'All selected time slots are no longer available. Please try selecting different slots.' 
           });
-        } catch (error) {
-          console.error('[Booking] Failed to send email notifications:', error);
-          // Don't fail the booking if email sending fails
         }
-
-        return { success: true };
+        
+        console.log(`[Booking] Successfully held ${holdResult.heldSlots.length} slots:`, holdResult.heldSlots);
+        
+        try {
+          // Step 2: Assign the earliest slot and create booking
+          const { slotId: assignedSlotId, slot: assignedSlot } = await assignEarliestSlot(
+            holdResult.heldSlots,
+            {
+              parentName: input.parentName,
+              childName: input.childName,
+              childAge: input.childAge,
+              userEmail: input.userEmail,
+              userPhone: input.userPhone,
+              notes: input.notes,
+            }
+          );
+          
+          console.log(`[Booking] Assigned slot ${assignedSlotId} to user ${input.userEmail}`);
+          
+          // Step 3: Send email notifications with the assigned slot
+          try {
+            const { sendBookingNotifications } = await import('./email-resend');
+            await sendBookingNotifications({
+              parentName: input.parentName,
+              childName: input.childName,
+              childAge: input.childAge,
+              userEmail: input.userEmail,
+              userPhone: input.userPhone,
+              location: assignedSlot.location,
+              slotTitle: assignedSlot.title,
+              startTime: new Date(assignedSlot.startTime),
+              endTime: new Date(assignedSlot.endTime),
+            });
+          } catch (error) {
+            console.error('[Booking] Failed to send email notifications:', error);
+            // Don't fail the booking if email sending fails
+          }
+          
+          return { 
+            success: true, 
+            assignedSlot: {
+              id: assignedSlotId,
+              title: assignedSlot.title,
+              location: assignedSlot.location,
+              startTime: assignedSlot.startTime,
+              endTime: assignedSlot.endTime,
+            }
+          };
+        } catch (error) {
+          // If assignment fails, release all holds
+          console.error('[Booking] Assignment failed, releasing holds:', error);
+          await releaseHolds(holdResult.heldSlots);
+          throw error;
+        }
       }),
 
     listByTimeSlot: publicProcedure

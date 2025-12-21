@@ -39,6 +39,9 @@ export const timeSlots = mysqlTable("timeSlots", {
   currentBookings: int("currentBookings").default(0).notNull(),
   isActive: int("isActive").default(1).notNull(),
   createdBy: int("createdBy").notNull(),
+  // Soft-hold fields
+  holdBy: varchar("holdBy", { length: 320 }), // Email of user holding this slot
+  holdExpiresAt: timestamp("holdExpiresAt"), // When the hold expires
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

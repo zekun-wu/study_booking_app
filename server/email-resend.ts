@@ -89,13 +89,15 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       
       <p>Thank you for booking a session for our study on <strong>Proactive AI Assistance in Reading with Parents and Children</strong>.</p>
       
-      <h3>Your Booking Details:</h3>
-      <ul>
-        <li><strong>Location:</strong> ${booking.location}</li>
-        <li><strong>Time Slot:</strong> ${booking.slotTitle}</li>
-        <li><strong>Date & Time:</strong> ${startTimeStr}</li>
-        <li><strong>Child:</strong> ${booking.childName} (Age: ${booking.childAge})</li>
-      </ul>
+      <h3>Your Confirmed Time Slot:</h3>
+      <div style="background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; margin: 16px 0;">
+        <p style="margin: 8px 0;"><strong>Location:</strong> ${booking.location}</p>
+        <p style="margin: 8px 0;"><strong>Time Slot:</strong> ${booking.slotTitle}</p>
+        <p style="margin: 8px 0;"><strong>Date & Time:</strong> ${startTimeStr}</p>
+        <p style="margin: 8px 0;"><strong>Child:</strong> ${booking.childName} (Age: ${booking.childAge})</p>
+      </div>
+      
+      <p style="color: #059669; font-weight: bold;">This is your final confirmed time slot. Please mark it in your calendar.</p>
       
       <h3>What to Expect:</h3>
       <p>The study session will take approximately 60 minutes and will be conducted entirely in German.</p>
