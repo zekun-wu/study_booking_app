@@ -36,12 +36,12 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       minute: '2-digit',
     });
 
-    // Determine admin email based on location
-    const adminEmail = booking.location === 'Saarland' 
-      ? 'wuzekun@cs.uni-saarland.de'
-      : 'm.su@iwm-tuebingen.de';
+    // Determine admin emails based on location
+    const adminEmails = booking.location === 'Saarland' 
+      ? ['wuzekun@cs.uni-saarland.de', 'philipprudakov@gmail.com']
+      : ['m.su@iwm-tuebingen.de'];
 
-    // Send notice email to admin
+    // Send notice email to admin(s)
     const noticeEmailHtml = `
       <h2>New Booking Notification</h2>
       <p>A new booking has been made for <strong>${booking.location}</strong>.</p>
@@ -65,22 +65,25 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       <p>Please log in to the admin dashboard to view more details.</p>
     `;
 
-    console.log(`[Email] Attempting to send notice email to ${adminEmail}...`);
-    const noticeResult = await resend.emails.send({
-      from: 'Study Booking <study-booking@zekunwu.com>',
-      to: adminEmail,
-      subject: `New Booking: ${booking.location} - ${booking.slotTitle}`,
-      html: noticeEmailHtml,
-    });
+    // Send to all admin emails for this location
+    for (const adminEmail of adminEmails) {
+      console.log(`[Email] Attempting to send notice email to ${adminEmail}...`);
+      const noticeResult = await resend.emails.send({
+        from: 'Study Booking <study-booking@zekunwu.com>',
+        to: adminEmail,
+        subject: `New Booking: ${booking.location} - ${booking.slotTitle}`,
+        html: noticeEmailHtml,
+      });
 
-    console.log(`[Email] Notice email result:`, JSON.stringify(noticeResult));
-    
-    if (noticeResult.error) {
-      console.error(`[Email] Notice email failed:`, noticeResult.error);
-      throw new Error(`Notice email failed: ${JSON.stringify(noticeResult.error)}`);
+      console.log(`[Email] Notice email result:`, JSON.stringify(noticeResult));
+      
+      if (noticeResult.error) {
+        console.error(`[Email] Notice email to ${adminEmail} failed:`, noticeResult.error);
+        // Continue sending to other admins even if one fails
+      } else {
+        console.log(`[Email] ✅ Notice email sent to ${adminEmail} (ID: ${noticeResult.data?.id})`);
+      }
     }
-    
-    console.log(`[Email] ✅ Notice email sent to ${adminEmail} (ID: ${noticeResult.data?.id})`);
 
     // Send confirmation email to user
     const confirmationEmailHtml = `
@@ -109,7 +112,7 @@ export async function sendBookingNotifications(booking: BookingDetails) {
         <li>Both parent and child should be present</li>
       </ul>
       
-      <p>If you need to cancel or reschedule, please contact us as soon as possible.</p>
+      <p>If you need to cancel or reschedule, please contact us as soon as possible at: <a href="mailto:${booking.location === 'Saarland' ? 'philipprudakov@gmail.com' : 'm.su@iwm-tuebingen.de'}">${booking.location === 'Saarland' ? 'philipprudakov@gmail.com' : 'm.su@iwm-tuebingen.de'}</a></p>
       
       <p>We look forward to seeing you!</p>
       
