@@ -84,6 +84,28 @@ export default function BookingPage() {
           </div>
         </div>
 
+        {/* Booking Limit Notice */}
+        <div className="max-w-2xl mx-auto mb-6 p-6 bg-amber-50 border-2 border-amber-500 rounded-lg">
+          <h2 className="text-xl font-bold text-amber-900 mb-2">
+            {language === 'en' ? '⚠️ Important Notice' : '⚠️ Wichtiger Hinweis'}
+          </h2>
+          <p className="text-base text-amber-800 font-semibold">
+            {language === 'en' ? (
+              <span>
+                Each person can book a <strong>maximum of 2 time slots</strong>. 
+                Please choose your preferred times carefully. 
+                If you need to make changes, please contact us.
+              </span>
+            ) : (
+              <span>
+                Jede Person kann <strong>maximal 2 Zeitfenster</strong> buchen. 
+                Bitte wählen Sie Ihre bevorzugten Zeiten sorgfältig aus. 
+                Wenn Sie Änderungen vornehmen müssen, kontaktieren Sie uns bitte.
+              </span>
+            )}
+          </p>
+        </div>
+
         <div className="max-w-2xl mx-auto mb-8 p-6 bg-blue-50 border-2 border-blue-500 rounded-lg">
           <Label htmlFor="location" className="text-xl font-bold mb-3 block text-blue-900">
             <MapPin className="inline h-6 w-6 mr-2" />

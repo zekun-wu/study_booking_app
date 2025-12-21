@@ -128,6 +128,15 @@ export const appRouter = router({
         notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        // Check if user has already made 2 bookings
+        const existingBookings = await db.getBookingsByEmail(input.userEmail);
+        if (existingBookings.length >= 2) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'You have reached the maximum limit of 2 bookings per person. Please contact us if you need to make changes.' 
+          });
+        }
+        
         // Check if slot exists and has capacity
         const slot = await db.getTimeSlotById(input.timeSlotId);
         if (!slot) {
@@ -173,6 +182,13 @@ export const appRouter = router({
     listByTimeSlot: publicProcedure
       .input(z.object({ timeSlotId: z.number() }))
       .query(({ input }) => db.getBookingsByTimeSlot(input.timeSlotId)),
+
+    countByEmail: publicProcedure
+      .input(z.object({ email: z.string().email() }))
+      .query(async ({ input }) => {
+        const bookings = await db.getBookingsByEmail(input.email);
+        return { count: bookings.length, bookings };
+      }),
 
     listAll: protectedProcedure.query(async ({ ctx }) => {
       if (ctx.user.role !== 'admin') {

@@ -156,6 +156,12 @@ export async function getBookingsByTimeSlot(timeSlotId: number) {
   return db.select().from(bookings).where(eq(bookings.timeSlotId, timeSlotId));
 }
 
+export async function getBookingsByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bookings).where(eq(bookings.userEmail, email));
+}
+
 // Admin queries
 export async function getAllAdmins() {
   const db = await getDb();
