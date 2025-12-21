@@ -59,10 +59,57 @@ export async function autoInitializeDatabase() {
     if (existingSlots.length === 0) {
       console.log("[Auto-Init] Generating time slots...");
       const slots = [];
-      const startDate = new Date("2025-11-30");
-      const endDate = new Date("2026-01-15");
-      const locations = ["Saarland", "IWM"];
-      const timeRanges = [
+      
+      // Helper function to check if a date is a weekday (Monday-Friday)
+      const isWeekday = (date: Date) => {
+        const day = date.getDay();
+        return day >= 1 && day <= 5; // 1=Monday, 5=Friday
+      };
+      
+      // Generate Saarland slots: Jan 19 - Feb 27, 2026, workdays only, 2-7 PM
+      const saarlandStart = new Date("2026-01-19");
+      const saarlandEnd = new Date("2026-02-27");
+      const saarlandTimeRanges = [
+        { start: "14:00", end: "15:00" }, // 2-3 PM
+        { start: "15:00", end: "16:00" }, // 3-4 PM
+        { start: "16:00", end: "17:00" }, // 4-5 PM
+        { start: "17:00", end: "18:00" }, // 5-6 PM
+        { start: "18:00", end: "19:00" }, // 6-7 PM
+      ];
+
+      for (let d = new Date(saarlandStart); d <= saarlandEnd; d.setDate(d.getDate() + 1)) {
+        // Skip weekends for Saarland
+        if (!isWeekday(d)) continue;
+        
+        for (const timeRange of saarlandTimeRanges) {
+          const slotDate = new Date(d);
+          const [startHour, startMinute] = timeRange.start.split(":").map(Number);
+          const [endHour, endMinute] = timeRange.end.split(":").map(Number);
+          
+          const startTime = new Date(slotDate);
+          startTime.setHours(startHour, startMinute, 0, 0);
+          
+          const endTime = new Date(slotDate);
+          endTime.setHours(endHour, endMinute, 0, 0);
+
+          slots.push({
+            location: "Saarland",
+            startTime,
+            endTime,
+            maxBookings: 1,
+            currentBookings: 0,
+            title: `Saarland - ${timeRange.start}`,
+            description: null,
+            isActive: 1,
+            createdBy: 1,
+          });
+        }
+      }
+      
+      // Generate IWM slots: Keep original schedule (Nov 30, 2025 - Jan 15, 2026, all days, 9 AM - 7 PM)
+      const iwmStart = new Date("2025-11-30");
+      const iwmEnd = new Date("2026-01-15");
+      const iwmTimeRanges = [
         { start: "09:00", end: "10:00" },
         { start: "10:00", end: "11:00" },
         { start: "11:00", end: "12:00" },
@@ -75,31 +122,29 @@ export async function autoInitializeDatabase() {
         { start: "18:00", end: "19:00" },
       ];
 
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        for (const location of locations) {
-          for (const timeRange of timeRanges) {
-            const slotDate = new Date(d);
-            const [startHour, startMinute] = timeRange.start.split(":").map(Number);
-            const [endHour, endMinute] = timeRange.end.split(":").map(Number);
-            
-            const startTime = new Date(slotDate);
-            startTime.setHours(startHour, startMinute, 0, 0);
-            
-            const endTime = new Date(slotDate);
-            endTime.setHours(endHour, endMinute, 0, 0);
+      for (let d = new Date(iwmStart); d <= iwmEnd; d.setDate(d.getDate() + 1)) {
+        for (const timeRange of iwmTimeRanges) {
+          const slotDate = new Date(d);
+          const [startHour, startMinute] = timeRange.start.split(":").map(Number);
+          const [endHour, endMinute] = timeRange.end.split(":").map(Number);
+          
+          const startTime = new Date(slotDate);
+          startTime.setHours(startHour, startMinute, 0, 0);
+          
+          const endTime = new Date(slotDate);
+          endTime.setHours(endHour, endMinute, 0, 0);
 
-            slots.push({
-              location,
-              startTime,
-              endTime,
-              maxBookings: 1,
-              currentBookings: 0,
-              title: `${location} - ${timeRange.start}`,
-              description: null,
-              isActive: 1,
-              createdBy: 1,
-            });
-          }
+          slots.push({
+            location: "IWM",
+            startTime,
+            endTime,
+            maxBookings: 1,
+            currentBookings: 0,
+            title: `IWM - ${timeRange.start}`,
+            description: null,
+            isActive: 1,
+            createdBy: 1,
+          });
         }
       }
 
