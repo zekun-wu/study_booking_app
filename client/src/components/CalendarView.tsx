@@ -20,9 +20,10 @@ interface CalendarViewProps {
   timeSlots: any[];
   onSlotClick: (slot: any) => void;
   showLocation?: boolean;
+  selectedSlots?: any[]; // Add selected slots prop
 }
 
-export default function CalendarView({ timeSlots, onSlotClick, showLocation = false }: CalendarViewProps) {
+export default function CalendarView({ timeSlots, onSlotClick, showLocation = false, selectedSlots = [] }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -177,14 +178,18 @@ export default function CalendarView({ timeSlots, onSlotClick, showLocation = fa
             const isAvailable = slot.currentBookings < slot.maxBookings;
             const spotsLeft = slot.maxBookings - slot.currentBookings;
 
+            const isSelected = selectedSlots.some(s => s.id === slot.id);
+            
             return (
               <Card
                 key={slot.id}
                 className={`
                   p-4 cursor-pointer transition-all border-2
-                  ${isAvailable 
-                    ? 'hover:border-blue-500 hover:shadow-md bg-white' 
-                    : 'bg-gray-50 border-gray-200 opacity-60 cursor-pointer hover:opacity-80'}
+                  ${isSelected 
+                    ? 'bg-blue-100 border-blue-600 shadow-lg ring-2 ring-blue-400' 
+                    : isAvailable 
+                      ? 'hover:border-blue-500 hover:shadow-md bg-white' 
+                      : 'bg-gray-50 border-gray-200 opacity-60 cursor-pointer hover:opacity-80'}
                 `}
                 onClick={() => onSlotClick(slot)}
               >
@@ -249,15 +254,19 @@ export default function CalendarView({ timeSlots, onSlotClick, showLocation = fa
                       const isAvailable = slot.currentBookings < slot.maxBookings;
                       const spotsLeft = slot.maxBookings - slot.currentBookings;
 
+                      const isSelected = selectedSlots.some(s => s.id === slot.id);
+                      
                       return (
                         <button
                           key={slot.id}
                           onClick={() => onSlotClick(slot)}
                           className={`
                             w-full text-xs p-2 rounded border transition-all cursor-pointer
-                            ${isAvailable 
-                              ? 'bg-blue-50 border-blue-300 hover:bg-blue-100 text-blue-700' 
-                              : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}
+                            ${isSelected 
+                              ? 'bg-blue-600 border-blue-700 text-white ring-2 ring-blue-400' 
+                              : isAvailable 
+                                ? 'bg-blue-50 border-blue-300 hover:bg-blue-100 text-blue-700' 
+                                : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}
                           `}
                         >
                           <div className="font-medium">{spotsLeft}/{slot.maxBookings}</div>

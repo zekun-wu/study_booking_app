@@ -161,6 +161,7 @@ export default function BookingPage() {
               timeSlots={timeSlots || []}
               onSlotClick={handleSlotClick}
               showLocation={false}
+              selectedSlots={selectedSlots}
             />
           </div>
         )}
