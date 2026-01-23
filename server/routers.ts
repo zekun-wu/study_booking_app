@@ -78,6 +78,30 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    deleteBeforeDate: protectedProcedure
+      .input(z.object({ beforeDate: z.number() })) // timestamp in milliseconds
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        const beforeDate = new Date(input.beforeDate);
+        await db.deleteTimeSlotsBeforeDate(beforeDate);
+        return { success: true };
+      }),
+
+    deleteMany: protectedProcedure
+      .input(z.object({ ids: z.array(z.number()) }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        if (input.ids.length === 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'No slot IDs provided' });
+        }
+        await db.deleteTimeSlots(input.ids);
+        return { success: true, deletedCount: input.ids.length };
+      }),
+
     listAll: protectedProcedure.query(async ({ ctx }) => {
       if (ctx.user.role !== 'admin') {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Loader2, Plus, LogOut, BarChart3 } from "lucide-react";
+import { Loader2, Plus, LogOut, BarChart3, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -22,6 +22,8 @@ export default function AdminDashboard() {
   const [showStats, setShowStats] = useState(false);
   const [viewingBookings, setViewingBookings] = useState(false);
   const [selectedSlotForBookings, setSelectedSlotForBookings] = useState<any>(null);
+  const [selectedSlotIds, setSelectedSlotIds] = useState<number[]>([]);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
   const utils = trpc.useUtils();
   const { data: timeSlots, isLoading: slotsLoading } = trpc.timeSlots.listAll.useQuery(undefined, {
@@ -87,6 +89,18 @@ export default function AdminDashboard() {
     },
   });
 
+  const bulkDeleteMutation = trpc.timeSlots.deleteMany.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Successfully deleted ${data.deletedCount} time slot(s)`);
+      setSelectedSlotIds([]);
+      setIsBulkDeleteDialogOpen(false);
+      utils.timeSlots.listAll.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -138,11 +152,21 @@ export default function AdminDashboard() {
     const startTime = formData.get("startTime") as string;
     const endDate = formData.get("endDate") as string;
     const endTime = formData.get("endTime") as string;
+    const location = formData.get("location") as string;
+
+    // Auto-generate title from location and start time
+    const startDateTime = new Date(`${startDate}T${startTime}`);
+    const formattedTime = startDateTime.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+    const autoTitle = `${location} - ${formattedTime}`;
 
     createMutation.mutate({
-      title: formData.get("title") as string,
+      title: autoTitle, // Use auto-generated title instead of form input
       description: formData.get("description") as string,
-      location: formData.get("location") as string,
+      location: location,
       startTime: new Date(`${startDate}T${startTime}`).getTime(),
       endTime: new Date(`${endDate}T${endTime}`).getTime(),
       maxBookings: parseInt(formData.get("maxBookings") as string),
@@ -156,12 +180,22 @@ export default function AdminDashboard() {
     const startTime = formData.get("startTime") as string;
     const endDate = formData.get("endDate") as string;
     const endTime = formData.get("endTime") as string;
+    const location = formData.get("location") as string;
+
+    // Auto-generate title from location and start time
+    const startDateTime = new Date(`${startDate}T${startTime}`);
+    const formattedTime = startDateTime.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+    const autoTitle = `${location} - ${formattedTime}`;
 
     updateMutation.mutate({
       id: editingSlot.id,
-      title: formData.get("title") as string,
+      title: autoTitle, // Use auto-generated title instead of form input
       description: formData.get("description") as string,
-      location: formData.get("location") as string,
+      location: location,
       startTime: new Date(`${startDate}T${startTime}`).getTime(),
       endTime: new Date(`${endDate}T${endTime}`).getTime(),
       maxBookings: parseInt(formData.get("maxBookings") as string),
@@ -182,6 +216,26 @@ export default function AdminDashboard() {
 
   const handleSlotClick = (slot: any) => {
     handleEdit(slot);
+  };
+
+  const handleSlotSelect = (slot: any, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSelectedSlotIds(prev => {
+      if (prev.includes(slot.id)) {
+        return prev.filter(id => id !== slot.id);
+      } else {
+        return [...prev, slot.id];
+      }
+    });
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedSlotIds.length === 0) return;
+    setIsBulkDeleteDialogOpen(true);
+  };
+
+  const confirmBulkDelete = () => {
+    bulkDeleteMutation.mutate({ ids: selectedSlotIds });
   };
 
   const totalSlots = timeSlots?.length || 0;
@@ -267,7 +321,14 @@ export default function AdminDashboard() {
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="title">Title</Label>
-                    <Input id="title" name="title" required />
+                    <Input 
+                      id="title" 
+                      name="title" 
+                      readOnly
+                      className="bg-gray-50 cursor-not-allowed"
+                      placeholder="Auto-generated from location and start time"
+                      title="Title is automatically generated from location and start time"
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="description">Description</Label>
@@ -330,6 +391,8 @@ export default function AdminDashboard() {
             <CalendarView
               timeSlots={timeSlots || []}
               onSlotClick={handleSlotClick}
+              onSlotSelect={handleSlotSelect}
+              selectedSlotIds={selectedSlotIds}
               showLocation={true}
             />
           </div>
@@ -346,7 +409,14 @@ export default function AdminDashboard() {
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="edit-title">Title</Label>
-                    <Input id="edit-title" name="title" defaultValue={editingSlot.title} required />
+                    <Input 
+                      id="edit-title" 
+                      name="title" 
+                      defaultValue={editingSlot.title} 
+                      readOnly
+                      className="bg-gray-50 cursor-not-allowed"
+                      title="Title is automatically generated from location and start time"
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="edit-description">Description</Label>
@@ -557,6 +627,53 @@ export default function AdminDashboard() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        )}
+
+        {/* Floating Bulk Delete Button */}
+        {selectedSlotIds.length > 0 && (
+          <>
+            <div className="fixed bottom-8 right-8 z-50">
+              <Button
+                onClick={handleBulkDelete}
+                size="lg"
+                variant="destructive"
+                className="shadow-2xl"
+              >
+                <Trash2 className="h-5 w-5 mr-2" />
+                Delete ({selectedSlotIds.length} slot{selectedSlotIds.length !== 1 ? 's' : ''})
+              </Button>
+            </div>
+
+            {/* Bulk Delete Confirmation Dialog */}
+            <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Bulk Delete</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete {selectedSlotIds.length} time slot{selectedSlotIds.length !== 1 ? 's' : ''}? 
+                    This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsBulkDeleteDialogOpen(false)}
+                    disabled={bulkDeleteMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={confirmBulkDelete}
+                    disabled={bulkDeleteMutation.isPending}
+                  >
+                    {bulkDeleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Delete {selectedSlotIds.length} Slot{selectedSlotIds.length !== 1 ? 's' : ''}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
         )}
       </div>
     </div>

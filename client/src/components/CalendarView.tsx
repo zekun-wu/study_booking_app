@@ -19,11 +19,13 @@ type ViewMode = "month" | "week" | "day";
 interface CalendarViewProps {
   timeSlots: any[];
   onSlotClick: (slot: any) => void;
+  onSlotSelect?: (slot: any, event: React.MouseEvent) => void;
+  selectedSlotIds?: number[];
   showLocation?: boolean;
-  selectedSlots?: any[]; // Add selected slots prop
+  selectedSlots?: any[]; // Add selected slots prop (for booking page)
 }
 
-export default function CalendarView({ timeSlots, onSlotClick, showLocation = false, selectedSlots = [] }: CalendarViewProps) {
+export default function CalendarView({ timeSlots, onSlotClick, onSlotSelect, selectedSlotIds = [], showLocation = false, selectedSlots = [] }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -178,22 +180,43 @@ export default function CalendarView({ timeSlots, onSlotClick, showLocation = fa
             const isAvailable = slot.currentBookings < slot.maxBookings;
             const spotsLeft = slot.maxBookings - slot.currentBookings;
 
-            const isSelected = selectedSlots.some(s => s.id === slot.id);
+            const isSelectedForBooking = selectedSlots.some(s => s.id === slot.id);
+            const isSelectedForDelete = selectedSlotIds.includes(slot.id);
+            const isSelected = isSelectedForBooking || isSelectedForDelete;
+            
+            const handleClick = (e: React.MouseEvent) => {
+              if (onSlotSelect && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                e.stopPropagation();
+                onSlotSelect(slot, e);
+              } else {
+                onSlotClick(slot);
+              }
+            };
             
             return (
               <Card
                 key={slot.id}
                 className={`
-                  p-4 cursor-pointer transition-all border-2
-                  ${isSelected 
+                  p-4 cursor-pointer transition-all border-2 relative
+                  ${isSelectedForDelete
                     ? 'bg-blue-100 border-blue-600 shadow-lg ring-2 ring-blue-400' 
-                    : isAvailable 
-                      ? 'hover:border-blue-500 hover:shadow-md bg-white' 
-                      : 'bg-gray-50 border-gray-200 opacity-60 cursor-pointer hover:opacity-80'}
+                    : isSelectedForBooking
+                      ? 'bg-blue-100 border-blue-600 shadow-lg ring-2 ring-blue-400'
+                      : isAvailable 
+                        ? 'hover:border-blue-500 hover:shadow-md bg-white' 
+                        : 'bg-gray-50 border-gray-200 opacity-60 cursor-pointer hover:opacity-80'}
                 `}
-                onClick={() => onSlotClick(slot)}
+                onClick={handleClick}
               >
                 <div className="space-y-2">
+                  {isSelectedForDelete && (
+                    <div className="absolute top-2 right-2">
+                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">✓</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="font-semibold text-gray-900">{timeStr}</div>
                   {showLocation && (
                     <div className="text-sm text-gray-600">{slot.location}</div>
@@ -254,21 +277,42 @@ export default function CalendarView({ timeSlots, onSlotClick, showLocation = fa
                       const isAvailable = slot.currentBookings < slot.maxBookings;
                       const spotsLeft = slot.maxBookings - slot.currentBookings;
 
-                      const isSelected = selectedSlots.some(s => s.id === slot.id);
+                      const isSelectedForBooking = selectedSlots.some(s => s.id === slot.id);
+                      const isSelectedForDelete = selectedSlotIds.includes(slot.id);
+                      const isSelected = isSelectedForBooking || isSelectedForDelete;
+                      
+                      const handleClick = (e: React.MouseEvent) => {
+                        if (onSlotSelect && (e.ctrlKey || e.metaKey)) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onSlotSelect(slot, e);
+                        } else {
+                          onSlotClick(slot);
+                        }
+                      };
                       
                       return (
                         <button
                           key={slot.id}
-                          onClick={() => onSlotClick(slot)}
+                          onClick={handleClick}
                           className={`
-                            w-full text-xs p-2 rounded border transition-all cursor-pointer
-                            ${isSelected 
+                            w-full text-xs p-2 rounded border transition-all cursor-pointer relative
+                            ${isSelectedForDelete
                               ? 'bg-blue-600 border-blue-700 text-white ring-2 ring-blue-400' 
-                              : isAvailable 
-                                ? 'bg-blue-50 border-blue-300 hover:bg-blue-100 text-blue-700' 
-                                : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}
+                              : isSelectedForBooking
+                                ? 'bg-blue-600 border-blue-700 text-white ring-2 ring-blue-400'
+                                : isAvailable 
+                                  ? 'bg-blue-50 border-blue-300 hover:bg-blue-100 text-blue-700' 
+                                  : 'bg-gray-100 border-gray-300 text-gray-500 hover:bg-gray-200'}
                           `}
                         >
+                          {isSelectedForDelete && (
+                            <div className="absolute top-1 right-1">
+                              <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center">
+                                <span className="text-blue-600 text-[8px] font-bold">✓</span>
+                              </div>
+                            </div>
+                          )}
                           <div className="font-medium">{spotsLeft}/{slot.maxBookings}</div>
                           {showLocation && <div className="text-[10px]">{slot.location}</div>}
                         </button>

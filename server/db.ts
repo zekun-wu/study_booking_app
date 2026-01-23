@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, lt, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, admins, InsertAdmin, timeSlots, InsertTimeSlot, bookings, InsertBooking } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -114,6 +114,20 @@ export async function deleteTimeSlot(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(timeSlots).where(eq(timeSlots.id, id));
+}
+
+export async function deleteTimeSlotsBeforeDate(beforeDate: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.delete(timeSlots).where(lt(timeSlots.startTime, beforeDate));
+  return result;
+}
+
+export async function deleteTimeSlots(ids: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (ids.length === 0) return;
+  await db.delete(timeSlots).where(inArray(timeSlots.id, ids));
 }
 
 export async function getAllTimeSlots() {
