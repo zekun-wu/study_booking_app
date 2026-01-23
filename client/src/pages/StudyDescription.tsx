@@ -123,13 +123,19 @@ export default function StudyDescription() {
                   <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-sm font-semibold">
                     4
                   </span>
-                  <span>{t('whatItem4')}</span>
+                  <span dangerouslySetInnerHTML={{ __html: t('whatItem4') }} />
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-sm font-semibold">
                     5
                   </span>
-                  <span>{t('whatItem5')}</span>
+                  <span dangerouslySetInnerHTML={{ __html: t('whatItem5') }} />
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-sm font-semibold">
+                    6
+                  </span>
+                  <span>{t('whatItem6')}</span>
                 </li>
               </ul>
             </CardContent>

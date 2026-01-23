@@ -25,10 +25,11 @@ export const translations = {
     whatWillHappen: "What Will Happen in This Study",
     whatWillHappenText: "If you and your child agree to participate:",
     whatItem1: "You and your child will take part in one study session lasting up to 40 minutes.",
-    whatItem2: "In some tasks, your child will read independently while receiving AI-based support.",
-    whatItem3: "In other tasks, you and your child will read together while the AI provides subtle prompts for you.",
-    whatItem4: "We will collect eye-tracking data, and record video and/or audio during the session.",
-    whatItem5: "You and your child may also be asked to participate in a short interview about your experiences.",
+    whatItem2: "During the session, we will collect eye-tracking data and may record video and/or audio.",
+    whatItem3: "You and your child may also be invited to take part in a short interview about your experience.",
+    whatItem4: "If you received this link from an older flyer, please note that we are currently recruiting children aged <strong>5 to 8</strong> years.",
+    whatItem5: "We can only test one child per appointment. To ensure a smooth session, we kindly ask families to <strong>bring only one participating child</strong>.",
+    whatItem6: "You may select up to three preferred time slots. We will contact you by email to confirm the final appointment time. Your booking is only finalized once you receive our confirmation.",
     continueToBooking: "Continue to Booking",
     
     // Booking page
@@ -89,10 +90,11 @@ export const translations = {
     whatWillHappen: "Was wird in dieser Studie passieren",
     whatWillHappenText: "Wenn Sie und Ihr Kind zustimmen teilzunehmen:",
     whatItem1: "Sie und Ihr Kind nehmen an einer Studiensitzung teil, die bis zu 40 Minuten dauert.",
-    whatItem2: "Bei einigen Aufgaben liest Ihr Kind selbstständig und erhält KI-basierte Unterstützung.",
-    whatItem3: "Bei anderen Aufgaben lesen Sie und Ihr Kind zusammen, während die KI subtile Hinweise für Sie bereitstellt.",
-    whatItem4: "Wir werden Eye-Tracking-Daten sammeln und während der Sitzung Video- und/oder Audioaufnahmen machen.",
-    whatItem5: "Sie und Ihr Kind werden möglicherweise auch gebeten, an einem kurzen Interview über Ihre Erfahrungen teilzunehmen.",
+    whatItem2: "Während der Sitzung erfassen wir Eye-Tracking-Daten und zeichnen ggf. Video und/oder Audio auf.",
+    whatItem3: "Sie und Ihr Kind werden möglicherweise auch zu einem kurzen Interview über Ihre Erfahrungen eingeladen.",
+    whatItem4: "Falls Sie diesen Link über einen älteren Flyer erhalten haben: Wir suchen derzeit Kinder im Alter von <strong>5 bis 8</strong> Jahren.",
+    whatItem5: "Wir können pro Termin nur ein Kind testen. Damit die Sitzung reibungslos abläuft, bitten wir Familien freundlich, <strong>nur ein teilnehmendes Kind mitzubringen</strong>.",
+    whatItem6: "Sie können bis zu drei bevorzugte Zeitslots auswählen. Wir kontaktieren Sie anschließend per E-Mail, um den finalen Termin zu bestätigen. Die Buchung ist erst nach unserer Bestätigung verbindlich.",
     continueToBooking: "Weiter zur Buchung",
     
     // Booking page

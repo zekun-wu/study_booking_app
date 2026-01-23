@@ -222,11 +222,22 @@ export default function BookingPage() {
                         <p className="font-semibold">
                           {language === 'en' ? 'Selected time slots:' : 'Ausgewählte Zeitfenster:'}
                         </p>
-                        {selectedSlots.map((slot, idx) => (
-                          <div key={slot.id} className="text-sm bg-blue-50 p-2 rounded">
-                            {idx + 1}. {slot.title} - {new Date(slot.startTime).toLocaleString(language === 'de' ? 'de-DE' : 'en-US')}
-                          </div>
-                        ))}
+                        {selectedSlots.map((slot, idx) => {
+                          const startTime = new Date(slot.startTime);
+                          const endTime = new Date(slot.endTime);
+                          const dateStr = startTime.toLocaleDateString(language === 'de' ? 'de-DE' : 'en-US', {
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          });
+                          const timeStr = `${startTime.toLocaleTimeString(language === 'de' ? 'de-DE' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: language === 'en' })} - ${endTime.toLocaleTimeString(language === 'de' ? 'de-DE' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: language === 'en' })}`;
+                          return (
+                            <div key={slot.id} className="text-sm bg-blue-50 p-2 rounded">
+                              {idx + 1}. {slot.location} - {dateStr}, {timeStr}
+                            </div>
+                          );
+                        })}
                         <p className="text-xs text-gray-600 mt-2">
                           {language === 'en' 
                             ? 'We will assign you the earliest available slot from your selection.' 
