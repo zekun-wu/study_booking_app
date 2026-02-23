@@ -27,6 +27,8 @@ export async function sendBookingNotifications(booking: BookingDetails) {
   console.log('[Email] Resend client initialized');
 
   try {
+    // Always format in study timezone so emails match the booked slot users see.
+    const studyTimeZone = 'Europe/Berlin';
     const startTimeStr = booking.startTime.toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -34,6 +36,8 @@ export async function sendBookingNotifications(booking: BookingDetails) {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: studyTimeZone,
+      timeZoneName: 'short',
     });
 
     // Determine admin emails based on location
